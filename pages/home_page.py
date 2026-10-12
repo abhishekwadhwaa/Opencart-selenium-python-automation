@@ -14,7 +14,20 @@ class HomePage:
 
     def open(self):
         self.driver.get("https://naveenautomationlabs.com/opencart/")
+    
+    def open_login(self):
+        account_menu = self.wait.until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "a[title='My Account']"))
+        )
+        account_menu.click()
 
+        login_link = self.wait.until(
+            EC.element_to_be_clickable(
+                (By.LINK_TEXT, "Login")
+            )
+        )
+        login_link.click()
+    
     def search_product(self, product_name):
         search_box = self.wait.until(
             EC.visibility_of_element_located(self.SEARCH_BOX)

@@ -26,3 +26,52 @@ def test_required_fields_validation(driver):
     registration_page.submit_empty_form()
 
     assert registration_page.is_first_name_error_displayed()
+
+def test_invalid_email_format(driver):
+    registration_page = RegistrationPage(driver)
+
+    registration_page.open()
+
+    registration_page.register(
+        "Abhishek",
+        "Wadhwa",
+        "invalid-email",
+        "9876543210",
+        "Test@123"
+    )
+
+    assert registration_page.driver.current_url.endswith(
+        "route=account/register"
+    )
+
+def test_password_mismatch(driver):
+    registration_page = RegistrationPage(driver)
+
+    registration_page.open()
+
+    registration_page.register(
+        "Abhishek",
+        "Wadhwa",
+        "test@gmail.com",
+        "974134137",
+        "Test@123",
+        "Test@456"
+    )
+
+    assert registration_page.is_confirm_password_error_displayed()
+
+
+def test_duplicate_email(driver):
+    registration_page = RegistrationPage(driver)
+
+    registration_page.open()
+
+    registration_page.register(
+        "Abhishek",
+        "Wadhwa",
+        "abhishek@gmail.com",
+        "9876543210",
+        "Test@123"
+    )
+
+    assert registration_page.is_duplicate_email_error_displayed()

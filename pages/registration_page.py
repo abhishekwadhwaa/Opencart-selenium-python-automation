@@ -23,7 +23,7 @@ class RegistrationPage:
             "https://naveenautomationlabs.com/opencart/index.php?route=account/register"
         )
 
-    def register(self, first_name, last_name, email, telephone, password):
+    def register(self, first_name, last_name, email, telephone, password, confirm_password = None):
         self.wait.until(
             EC.visibility_of_element_located(self.FIRST_NAME)
         ).send_keys(first_name)
@@ -34,11 +34,18 @@ class RegistrationPage:
 
         self.driver.find_element(*self.TELEPHONE).send_keys(telephone)
 
+
         self.driver.find_element(*self.PASSWORD).send_keys(password)
 
-        self.driver.find_element(*self.CONFIRM_PASSWORD).send_keys(password)
+        if confirm_password is None:
+            confirm_password = password
+
+        self.driver.find_element(
+            *self.CONFIRM_PASSWORD
+        ).send_keys(confirm_password)
 
         self.driver.find_element(*self.PRIVACY_POLICY).click()
+
 
         self.driver.find_element(*self.CONTINUE_BUTTON).click()
 
@@ -50,15 +57,52 @@ class RegistrationPage:
             EC.visibility_of_element_located(self.SUCCESS_MESSAGE)
         )
 
-        return success_message.text == "Your Account Has Been Created!" 
+        return success_message.text == "Your Account Has Been Created!"
 
     FIRST_NAME_ERROR = (By.CSS_SELECTOR, "#input-firstname + div.text-danger")
+
+    CONFIRM_PASSWORD_ERROR = (
+        By.CSS_SELECTOR,
+        "#input-confirm + div.text-danger"
+    )
+
+    DUPLICATE_EMAIL_ERROR = (
+        By.XPATH,
+        "//div[contains(@class, 'alert-danger') and contains(., 'E-Mail Address is already registered!')]"
+    )
 
     def is_first_name_error_displayed(self):
         return self.wait.until(
             EC.visibility_of_all_elements_located(self.FIRST_NAME_ERROR)
         )
 
+    def is_confirm_password_error_displayed(self):
+        return self.wait.until(
+            EC.visibility_of_element_located(self.CONFIRM_PASSWORD_ERROR)
+        ).is_displayed()
+
+    def is_duplicate_email_error_displayed(self):
+        return self.wait.until(
+            EC.visibility_of_element_located(
+                self.DUPLICATE_EMAIL_ERROR
+            )
+        ).is_displayed()
+
     def submit_empty_form(self):
         self.driver.find_element(*self.CONTINUE_BUTTON).click()
-    
+
+
+    def test_password_mismatch(driver):
+        registration_page = RegistrationPage(driver)
+
+        registration_page.open()
+
+        registration_page.register(
+            'Abhishek'
+            'Wadhwa'
+            'abc@gmail.com'
+            '956062325'
+            'Test@123'
+        )
+
+        assert registration_page.is_confirmed_password_error_displayed()
