@@ -1,5 +1,7 @@
 from pages.registration_page import RegistrationPage
 from utils.data_generator import generate_unique_email
+import json
+from pathlib import Path
 
 def test_successful_registration(driver):
     registration_page = RegistrationPage(driver)
@@ -7,6 +9,19 @@ def test_successful_registration(driver):
     registration_page.open()
 
     email = generate_unique_email()
+
+    account = {
+        "first_name": "Abhishek",
+        "last_name": "Wadhwa",
+        "email": email, 
+        "password": "Test@123",
+        "telephone": "9876543210"
+    }
+
+    file_path = Path(__file__).parent.parent / "test_data" / "test_account.json"
+
+    with open(file_path, "w") as file:
+        json.dump(account, file, indent=4)
 
     registration_page.register(
         "Abhishek",

@@ -18,6 +18,16 @@ class SearchResultsPage:
 
         return [product.text for product in products]
 
+    NO_RESULTS_MESSAGE = (
+        By.XPATH,
+        "//p[contains(text(), 'There is no product that matches the search criteria.')]"
+    )
+    
+    def is_no_results_message_displayed(self):
+        return len(
+            self.driver.find_elements(*self.NO_RESULTS_MESSAGE)
+        ) > 0
+   
     def is_product_displayed(self, product_name):
         product_names = self.get_product_names()
         

@@ -92,17 +92,4 @@ class RegistrationPage:
         self.driver.find_element(*self.CONTINUE_BUTTON).click()
 
 
-    def test_password_mismatch(driver):
-        registration_page = RegistrationPage(driver)
 
-        registration_page.open()
-
-        registration_page.register(
-            'Abhishek'
-            'Wadhwa'
-            'abc@gmail.com'
-            '956062325'
-            'Test@123'
-        )
-
-        assert registration_page.is_confirmed_password_error_displayed()
