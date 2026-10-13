@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
+from pages.product_page import ProductPage
 
 class SearchResultsPage:
 
@@ -22,7 +22,7 @@ class SearchResultsPage:
         By.XPATH,
         "//p[contains(text(), 'There is no product that matches the search criteria.')]"
     )
-    
+
     def is_no_results_message_displayed(self):
         return len(
             self.driver.find_elements(*self.NO_RESULTS_MESSAGE)
@@ -32,3 +32,13 @@ class SearchResultsPage:
         product_names = self.get_product_names()
         
         return product_name in product_names
+    
+    def open_product(self, product_name):
+        product_link = self.wait.until(
+            EC.element_to_be_clickable(
+                (By.LINK_TEXT, product_name)
+            )
+        )
+        product_link.click()
+
+        return ProductPage(self.driver)
