@@ -51,3 +51,11 @@ class ProductPage:
             EC.visibility_of_element_located(self.CART_SUCCESS_MESSAGE)
         ).text
     
+    QUANTITY_FIELD = (By.ID, "input-quantity")
+
+    def set_quantity(self, quantity):
+        field = self.wait.until(
+            EC.visibility_of_element_located(self.QUANTITY_FIELD)
+        )
+        field.clear()
+        field.send_keys(str(quantity))
