@@ -2,7 +2,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 
 class CheckoutPage:
     GUEST_CHECKOUT = (By.CSS_SELECTOR, "input[name='account'][value='guest']")
@@ -20,6 +20,9 @@ class CheckoutPage:
     COUNTRY = (By.ID, "input-payment-country")
     REGION = (By.ID, "input-payment-zone")
     PAYMENT_METHOD_SECTION = (By.ID, "collapse-payment-method")
+    TERMS_CHECKBOX = (By.CSS_SELECTOR, "input[name='agree']")
+    PAYMENT_CONTINUE_BUTTON = (By.ID, "button-payment-method")
+    PAYMENT_ERROR = (By.CSS_SELECTOR, "#collapse-payment-method .alert-danger")
 
     def __init__(self, driver):
         self.driver = driver
@@ -28,16 +31,58 @@ class CheckoutPage:
             ignored_exceptions=(StaleElementReferenceException,)
         )
 
-    def select_guest_checkout(self):
-        guest_radio = self.wait.until(
-            EC.element_to_be_clickable(self.GUEST_CHECKOUT)
+    def open_checkout(self):
+        cart_url = (
+            "https://naveenautomationlabs.com/opencart/"
+            "index.php?route=checkout/cart"
         )
+
+        self.driver.get(cart_url)
+
+        cart_items = self.driver.find_elements(
+            By.CSS_SELECTOR, ".table-responsive tbody tr"
+        )
+
+        if not cart_items:
+            raise AssertionError(
+                "Checkout setup failed: Shopping Cart is empty. "
+                "The product was not successfully added or retained."
+            )
+
+        checkout_button = self.wait.until(
+            EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, "a.btn.btn-primary[href*='checkout/checkout']")
+            )
+        )
+        checkout_button.click()
+
+        self.wait.until(
+            EC.visibility_of_element_located(self.GUEST_CHECKOUT)
+        )
+
+
+    def select_guest_checkout(self):
+        try:
+            guest_radio = self.wait.until(
+                EC.element_to_be_clickable(self.GUEST_CHECKOUT)
+            )
+        except TimeoutException:
+            print("Checkout URL:", self.driver.current_url)
+            print("Page title:", self.driver.title)
+            self.driver.save_screenshot("guest_checkout_failure.png")
+            raise
+
         guest_radio.click()
 
         continue_button = self.wait.until(
             EC.element_to_be_clickable(self.CONTINUE_BUTTON)
         )
         continue_button.click()
+
+        self.wait.until(
+            EC.visibility_of_element_located(self.EMAIL)
+        )
+
 
     def is_billing_details_displayed(self):
         return self.wait.until(
@@ -98,3 +143,70 @@ class CheckoutPage:
         return self.wait.until(
             EC.visibility_of_element_located(self.PAYMENT_METHOD_SECTION)
         ).is_displayed()
+
+    def is_payment_method_available(self):
+        return len(
+            self.driver.find_elements(
+                By.CSS_SELECTOR,
+                "#collapse-payment-method input[name='payment_method']"
+            )
+        ) > 0
+
+    PAYMENT_WARNING = (By.CSS_SELECTOR, "#collapse-payment-method .alert-warning")
+
+    def get_payment_warning(self):
+        return self.wait.until(
+            EC.visibility_of_element_located(self.PAYMENT_WARNING)
+        ).text
+
+    ORDER_COMMENT = (By.NAME, "comment")
+
+    def enter_order_comment(self, comment):
+        comment_box = self.wait.until(
+            EC.visibility_of_element_located(self.ORDER_COMMENT)
+        )
+        comment_box.clear()
+        comment_box.send_keys(comment)
+
+    def get_order_comment(self):
+        comment_box = self.wait.until(
+            EC.visibility_of_element_located(self.ORDER_COMMENT)
+        )
+        return comment_box.get_attribute("value")
+
+    def continue_without_agreeing(self):
+        checkbox = self.wait.until(
+            EC.element_to_be_clickable(self.TERMS_CHECKBOX)
+        )
+
+        if checkbox.is_selected():
+            checkbox.click()
+
+        self.wait.until(
+            EC.element_to_be_clickable(self.PAYMENT_CONTINUE_BUTTON)
+        ).click()
+
+
+    def get_payment_error(self):
+        return self.wait.until(
+            EC.visibility_of_element_located(self.PAYMENT_ERROR)
+        ).text
+
+    def continue_with_agreement(self):
+        checkbox = self.wait.until(
+            EC.element_to_be_clickable(self.TERMS_CHECKBOX)
+        )
+
+        if not checkbox.is_selected():
+            checkbox.click()
+
+        self.wait.until(
+            EC.element_to_be_clickable(self.PAYMENT_CONTINUE_BUTTON)
+        ).click()
+
+    CONFIRM_ORDER_SECTION = (By.ID, "collapse-checkout-confirm")
+
+    def is_confirm_order_collapsed(self):
+        section = self.driver.find_element(*self.CONFIRM_ORDER_SECTION)
+        return "in" not in section.get_attribute("class").split()
+    

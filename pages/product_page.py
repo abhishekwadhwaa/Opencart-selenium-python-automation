@@ -44,6 +44,18 @@ class ProductPage:
             EC.element_to_be_clickable(self.ADD_TO_CART_BUTTON)
         ).click()
 
+        self.wait.until(
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, ".alert-success")
+            )
+        )
+
+        self.wait.until(
+            lambda driver: "1 item(s)" in driver.find_element(
+                By.ID, "cart-total"
+            ).text
+        )
+
     CART_SUCCESS_MESSAGE = (By.CSS_SELECTOR, ".alert-success")
 
     def get_cart_success_message(self):
