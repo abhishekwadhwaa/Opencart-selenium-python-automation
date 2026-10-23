@@ -31,35 +31,47 @@ class CheckoutPage:
             ignored_exceptions=(StaleElementReferenceException,)
         )
 
+
     def open_checkout(self):
         cart_url = (
             "https://naveenautomationlabs.com/opencart/"
             "index.php?route=checkout/cart"
         )
 
-        self.driver.get(cart_url)
+        for attempt in range(3):
+            self.driver.get(cart_url)
 
-        cart_items = self.driver.find_elements(
-            By.CSS_SELECTOR, ".table-responsive tbody tr"
-        )
-
-        if not cart_items:
-            raise AssertionError(
-                "Checkout setup failed: Shopping Cart is empty. "
-                "The product was not successfully added or retained."
+            cart_items = self.driver.find_elements(
+                By.CSS_SELECTOR, ".table-responsive tbody tr"
             )
 
-        checkout_button = self.wait.until(
-            EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "a.btn.btn-primary[href*='checkout/checkout']")
+            if not cart_items:
+                raise AssertionError(
+                    "Checkout setup failed: Shopping Cart is empty."
+                )
+
+            checkout_button = self.wait.until(
+                EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, "a.btn.btn-primary[href*='checkout/checkout']")
+                )
             )
-        )
-        checkout_button.click()
+            checkout_button.click()
 
-        self.wait.until(
-            EC.visibility_of_element_located(self.GUEST_CHECKOUT)
-        )
+            try:
+                self.wait.until(
+                    EC.visibility_of_element_located(self.GUEST_CHECKOUT)
+                )
+                return
+            except TimeoutException:
+                print(
+                    f"Checkout attempt {attempt + 1} failed. "
+                    f"Current URL: {self.driver.current_url}"
+                )
 
+        raise AssertionError(
+            "Checkout page did not load after 3 attempts. "
+            f"Last URL: {self.driver.current_url}"
+        )
 
     def select_guest_checkout(self):
         try:
