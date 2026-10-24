@@ -3,6 +3,9 @@ from pages.home_page import HomePage
 from pages.login_page import LoginPage
 import json
 from pathlib import Path
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 def test_invalid_login(driver):
     home_page = HomePage(driver)
@@ -64,7 +67,8 @@ def test_successful_login(driver):
     login_page = LoginPage(driver)
     login_page.login(account["email"], account["password"])
 
-    print("Current URL:", driver.current_url)
+    WebDriverWait(driver, 15).until(
+        EC.url_contains("route=account/account")
+    )
 
     assert "route=account/account" in driver.current_url
-
