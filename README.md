@@ -52,7 +52,7 @@ Opencart-selenium-python-automation/
 Clone the repository:
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/abhishekwadhwaa/Opencart-selenium-python-automation
 cd Opencart-selenium-python-automation
 ```
 
